@@ -5,7 +5,7 @@ import struct
 class DataProcessor(ABC):
 
     @abstractmethod
-    def filter_by_rssi(self, devices: List[Dict]) -> List[Dict]:
+    def sort_by_rssi(self, devices: List[Dict]) -> List[Dict]:
         pass
 
     @abstractmethod
@@ -21,7 +21,7 @@ class DataFilter(DataProcessor):
         super().__init__()
         self.target_macs = target_macs
     
-    def filter_by_rssi(self, devices: List[Dict]) -> List[Dict]:
+    def sort_by_rssi(self, devices: List[Dict]) -> List[Dict]:
 
         valid_beacons = [d for d in devices if d.get('rssi') is not None]
         return sorted(valid_beacons, key=lambda x: x['rssi'], reverse=True)

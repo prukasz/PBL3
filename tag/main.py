@@ -6,7 +6,9 @@ from Tag import Tag
 
 async def main():
 
+    #todo zapis do pliku skanów 
     #custom uuid whitelist
+    #z pliku 
     TARGET_MACS = [
         "C0:1A:14:25:CB:9B",
         "75:AE:8B:09:53:E9"
