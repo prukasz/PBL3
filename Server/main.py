@@ -5,7 +5,7 @@ from Mqtt_conn import PahoMQTTAdapter
 from Mqtt_services import PremiumBeacon, AlarmTag
 
 async def main():
-    broker = PahoMQTTAdapter("192.168.1.19", 1883)
+    broker = PahoMQTTAdapter("192.168.114.74", 1883)
 
     #simple serivces to test
     beacon_handling = PremiumBeacon()

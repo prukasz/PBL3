@@ -51,8 +51,6 @@ class AlarmTag(MqttPublisher):
 
             #Publish received content
             await mqtt_client.publish(full_topic, message_content)
-            print(f"Sent: {full_topic} -> {message_content}")
-            
+            print(f"Sent: {full_topic} -> {message_content}")      
             self._queue.task_done()
-
 

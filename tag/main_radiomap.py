@@ -7,7 +7,7 @@ from FileHandler import FileHandler
 SCAN_DURATION = 10    
 ADV_DURATION = 1     
 ADV_PERIOD_MS = 200
-POINT_SCAN_CNT = 5
+POINT_SCAN_CNT = 3
 
 async def main():
     
