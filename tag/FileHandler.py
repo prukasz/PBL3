@@ -15,9 +15,9 @@ class FileHandler:
             macs = [line.strip() for line in f.readlines() if line.strip()]
         return macs
 
-    def save_point_header(self, point_number):
-        header = f"P{point_number}\n"
-        self._append_to_file(header)
+    def save_point_header(self, point_number, header):
+        _header = f"{header} {point_number}\n"
+        self._append_to_file(_header)
 
     def save_scan_data(self, beacons):
         if not beacons:

@@ -4,7 +4,7 @@ from Tag import Tag
 from Data_processing import DataFilter
 from FileHandler import FileHandler
 
-SCAN_DURATION = 5    
+SCAN_DURATION = 10    
 ADV_DURATION = 1     
 ADV_PERIOD_MS = 200
 POINT_SCAN_CNT = 5
@@ -29,20 +29,30 @@ async def main():
             adv_period=ADV_PERIOD_MS
         )
 
-        print("Type 'S' to scan point, 'Q' to quit.")
+        print("Type 'S' to scan point, 'H' to set header, 'Q' to quit.")
         
         point_counter = 1
+        current_header = "P"  # Default header
 
         while True:
-            cmd = input(f"\n[Point {point_counter}] Ready? (S/Q): ").strip().upper()
+            cmd = input(f"\n[Point {point_counter} | {current_header}] Ready? (S/H/Q): ").strip().upper()
 
             if cmd == 'Q':
                 break
             
+            elif cmd == 'H':
+                new_header = input("Enter new header name: ").strip()
+                if new_header:
+                    current_header = new_header
+                    point_counter = 1 
+                    print(f"Header updated to: {current_header}")
+                else:
+                    print("Header cannot be empty.")
+
             elif cmd == 'S':
-                print(f"Measuring Point {point_counter}")
+                print(f"Measuring Point {point_counter} at {current_header}")
                 
-                file_manager.save_point_header(point_counter)
+                file_manager.save_point_header(point_counter, current_header)
 
                 for i in range(1, POINT_SCAN_CNT+1):
                     print(f"Scan {i}/{POINT_SCAN_CNT}")
