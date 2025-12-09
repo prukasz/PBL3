@@ -1,0 +1,13 @@
+prukasz 
+Haslo: jegoszerokosc
+
+Welcome
+Initial User Setup
+Complete
+HnJNerjV3H5ay1g8oPvyWqc6A3L4Rucl5SBjHZ8rRWC-8nJVKqeEMYjKB1qJ40Jwst8xvj05AdTCG6qTi2jNEQ==
+Timing is everything!
+This will set up local metric collection and allow you to explore the features of InfluxDB quickly.
+Whoa looks like you’re an expert!
+This allows you to set up Telegraf, scrapers, and much more.
+I've got this...
+Jump into InfluxDB and set up data collection when you’re ready.

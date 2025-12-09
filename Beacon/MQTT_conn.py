@@ -22,3 +22,4 @@ class MQTTInterface(ABC):
     
     @abstractmethod
     async def disconnect(self) -> bool:
+        pass
