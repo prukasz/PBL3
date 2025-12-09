@@ -1,6 +1,7 @@
 from Ble_conn import BLEInterface
 from Data_processing import DataProcessor
 from pprint import pprint
+from typing import List, Dict
 
 class Tag:
     def __init__(self, ble_adapter: BLEInterface, data_processor: DataProcessor, adv_time: int, adv_period: int, scan_time: int):
@@ -17,7 +18,7 @@ class Tag:
         pprint(raw_beacons)
 
         selected_beacons = self.processor.get_specific_beacons(raw_beacons)
-        sorted_beacons = self.processor.filter_by_rssi(selected_beacons)
+        sorted_beacons = self.processor.sort_by_rssi(selected_beacons)
         
         if sorted_beacons:
             print(f"[TAG] Found {len(sorted_beacons)} compliant beacons:")
@@ -33,3 +34,11 @@ class Tag:
             print("[TAG] Advertising finished successfully")
         else:
             print("[TAG] Advertising failed")
+
+    async def scan_only(self)->List[Dict]: 
+        print(f"[TAG] Scanning for {self.scan_time} seconds")
+        raw_beacons = await self.ble.scan(duration=self.scan_time)
+        selected_beacons = self.processor.get_specific_beacons(raw_beacons)
+        sorted_beacons = self.processor.sort_by_rssi(selected_beacons)
+        pprint(sorted_beacons)
+        return sorted_beacons
