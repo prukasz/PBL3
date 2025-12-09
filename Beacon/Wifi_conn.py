@@ -14,9 +14,9 @@ class WifiInterface(ABC):
 class WifiConn(WifiInterface):
     async def connect_wifi(ssid, password):
         proc = await asyncio.create_subprocess_exec(
-        'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await proc.wait()
-    return proc.returncode == 0
+            'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await proc.wait()
+        return proc.returncode == 0

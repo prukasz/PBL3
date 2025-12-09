@@ -1,7 +1,8 @@
 import asyncio
 from Ble_conn import BleakBLEInterface
+from Wifi_conn import WifiConn
+from MQTT_conn import MQTTInterfacePaho
 from Data_processing import DataFilterBeacon
-from Tag import Tag
 from Beacon import Beacon
 
 
@@ -18,9 +19,12 @@ async def main():
     ADV_PERIOD_MS = 200
 
     try:
+        loop = asyncio.get_running_loop()
+        
         ble_interface = BleakBLEInterface()
         data_filter = DataFilterBeacon(target_macs=TARGET_MACS)
         wifi_interface = WifiConn()
+        mqtt_interface = MQTTInterfacePaho(broker_address="192.168.114.134", broker_port=1883, on_message_callback=None)
 
         beacon = Beacon(
             ble_adapter=ble_interface, #DI
@@ -28,8 +32,15 @@ async def main():
             scan_time=SCAN_DURATION,
             adv_time=ADV_DURATION,
             adv_period=ADV_PERIOD_MS,
-            wifi_adapter=wifi_interface  # Pass the WiFi adapter for Beacon
+            wifi_adapter=wifi_interface,
+            mqtt_client=mqtt_interface,
+            loop=loop  # Przekaż event loop
         )
+
+        await beacon.mqtt.connect()
+        await beacon.mqtt.subscribe("beacon/test", 1)
+        print("[main] Subscribed to beacon/test")
+        
         while True:        #run in loop
             await beacon.run_cycle()
 
