@@ -23,7 +23,6 @@ class MQTTInterface(ABC):
     
     @abstractmethod
     async def disconnect(self) -> bool:
-<<<<<<< HEAD
         pass
 
 
@@ -79,6 +78,3 @@ class MQTTInterfacePaho(MQTTInterface):
             print(f"[MQTT] Disconnect failed: {e}")
             return False
 
-=======
-        pass
->>>>>>> 73e237bc02acf3fc93a8a7ef9cbb5535d2ad7289

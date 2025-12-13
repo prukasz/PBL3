@@ -20,6 +20,11 @@ class Beacon:
         self.mqtt_advertising_active = False  # Flag to pause run_cycle during MQTT advertising
         self.loop = loop  # Event loop for MQTT callback from different thread
         
+        # Alarm queue system
+        self.alarm_queue = asyncio.Queue()  # Queue for incoming alarms
+        self.current_alarm = None  # Track current alarm being processed
+        self.is_processing_alarm = False  # Flag to prevent overlapping alarm processing
+        
         # Set this instance's on_message as MQTT callback
         if hasattr(self.mqtt, 'client'):
             self.mqtt.client.on_message = self.on_message
@@ -30,39 +35,84 @@ class Beacon:
         print(f"[MQTT] Received message: {payload}")
         
         if self.loop:
-            # MQTT callback działa w osobnym wątku, musimy użyć run_coroutine_threadsafe
+            # Add alarm to queue instead of triggering immediately
             asyncio.run_coroutine_threadsafe(
-                self.advertise_from_mqtt(payload),
+                self.add_alarm_to_queue(payload),
                 self.loop
             )
         else:
             print("[Beacon] Warning: Event loop not set, cannot trigger advertising")
     
-    async def advertise_from_mqtt(self, payload: str):
-        """Trigger BLE advertising with payload from MQTT message"""
-        print(f"[Beacon] Starting advertising from MQTT with payload: {payload}")
+    async def add_alarm_to_queue(self, payload: str):
+        """Add alarm to queue with deduplication"""
+        # Check if this alarm is already in the queue or being processed
+        if self.current_alarm == payload:
+            print(f"[Beacon] Alarm already being processed, ignoring: {payload}")
+            return
         
-        # Set flag to pause run_cycle
-        self.mqtt_advertising_active = True
+        # Check if alarm is already in queue (peek at queue items)
+        queue_items = list(self.alarm_queue._queue)
+        if payload in queue_items:
+            print(f"[Beacon] Alarm already in queue, ignoring: {payload}")
+            return
         
-        # Wait for scanning to finish if active
-        while BleakBLEInterface._is_scanning:
-            print("[Beacon] Waiting for scan to finish...")
-            await asyncio.sleep(0.5)
+        await self.alarm_queue.put(payload)
+        print(f"[Beacon] Alarm added to queue: {payload} (Queue size: {self.alarm_queue.qsize()})")
+    
+    async def process_alarm_queue(self):
+        """Continuously process alarms from the queue one at a time"""
+        print("[Beacon] Alarm queue processor started")
         
-        success = await self.ble.advertise(
-            time=self.adv_time, 
-            period=self.adv_period, 
-            payload=payload
-        )
-        
-        # Clear flag after advertising completes
-        self.mqtt_advertising_active = False
-        
-        if success:
-            print("[Beacon] MQTT-triggered advertising finished successfully")
-        else:
-            print("[Beacon] MQTT-triggered advertising failed")
+        while True:
+            try:
+                # Wait for an alarm from the queue
+                payload = await self.alarm_queue.get()
+                
+                # Set current alarm and processing flag
+                self.current_alarm = payload
+                self.is_processing_alarm = True
+                
+                print(f"[Beacon] Processing alarm from queue: {payload}")
+                
+                # Set flag to pause run_cycle
+                self.mqtt_advertising_active = True
+                
+                # Wait for scanning to finish if active (with timeout)
+                wait_count = 0
+                max_wait = 20  # Maximum 10 seconds (20 * 0.5s)
+                while BleakBLEInterface._is_scanning and wait_count < max_wait:
+                    print("[Beacon] Waiting for scan to finish...")
+                    await asyncio.sleep(0.5)
+                    wait_count += 1
+                
+                if wait_count >= max_wait:
+                    print("[Beacon] Warning: Timeout waiting for scan to finish")
+                
+                # Perform advertising
+                success = await self.ble.advertise(
+                    time=self.adv_time, 
+                    period=self.adv_period, 
+                    payload=payload
+                )
+                
+                if success:
+                    print(f"[Beacon] Alarm advertising finished successfully: {payload}")
+                else:
+                    print(f"[Beacon] Alarm advertising failed: {payload}")
+                
+                # Clear flags
+                self.mqtt_advertising_active = False
+                self.current_alarm = None
+                self.is_processing_alarm = False
+                
+                # Mark task as done
+                self.alarm_queue.task_done()
+                
+            except Exception as e:
+                print(f"[Beacon] Error processing alarm: {e}")
+                self.mqtt_advertising_active = False
+                self.current_alarm = None
+                self.is_processing_alarm = False
 
     async def run_cycle(self):
         # Skip scanning if MQTT advertising is active
@@ -89,5 +139,7 @@ class Beacon:
         # The output looks like "Devices:\n\thci0\tAA:BB:CC:DD:EE:FF", so we split it to get the address
         bluetooth_mac = (cmd.split()[2]).replace(":","")
 
-        await self.mqtt.publish(bluetooth_mac, "TEST", 1)
+        for dev in selected_tags:
+            Topic = f"floor/{bluetooth_mac}/{dev['mac'].replace(":","")}"
+            await self.mqtt.publish(Topic, ''.join(['' + data.hex() for data in dev['mdata'].values()]), 1)
         

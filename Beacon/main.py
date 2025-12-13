@@ -14,8 +14,8 @@ async def main():
         "75:AE:8B:09:53:E9"
     ]
     
-    SCAN_DURATION = 5
-    ADV_DURATION = 10
+    SCAN_DURATION = 4
+    ADV_DURATION = 1
     ADV_PERIOD_MS = 200
 
     try:
@@ -24,7 +24,7 @@ async def main():
         ble_interface = BleakBLEInterface()
         data_filter = DataFilterBeacon(target_macs=TARGET_MACS)
         wifi_interface = WifiConn()
-        mqtt_interface = MQTTInterfacePaho(broker_address="192.168.114.134", broker_port=1883, on_message_callback=None)
+        mqtt_interface = MQTTInterfacePaho(broker_address="192.168.114.74", broker_port=1883, on_message_callback=None)
 
         beacon = Beacon(
             ble_adapter=ble_interface, #DI
@@ -38,8 +38,12 @@ async def main():
         )
 
         await beacon.mqtt.connect()
-        await beacon.mqtt.subscribe("beacon/test", 1)
-        print("[main] Subscribed to beacon/test")
+        await beacon.mqtt.subscribe("alarm/#", 1)
+        print("[main] Subscribed to alarm")
+          
+        # Start the alarm queue processor as a background task
+        alarm_processor_task = asyncio.create_task(beacon.process_alarm_queue())
+        print("[main] Alarm queue processor started")
         
         while True:        #run in loop
             await beacon.run_cycle()
