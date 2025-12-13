@@ -77,4 +77,3 @@ class MQTTInterfacePaho(MQTTInterface):
         except Exception as e:
             print(f"[MQTT] Disconnect failed: {e}")
             return False
-
