@@ -15,7 +15,7 @@ class Tag:
         print(f"[TAG] Scanning for {self.scan_time} seconds")
         raw_beacons = await self.ble.scan(duration=self.scan_time)
         
-        pprint(raw_beacons)
+        #pprint(raw_beacons)
 
         selected_beacons = self.processor.get_specific_beacons(raw_beacons)
         sorted_beacons = self.processor.sort_by_rssi(selected_beacons)
@@ -23,7 +23,7 @@ class Tag:
         if sorted_beacons:
             print(f"[TAG] Found {len(sorted_beacons)} compliant beacons:")
             for dev in sorted_beacons:
-                print(f"Filtered: {dev['mac']} ({dev['name']}) | RSSI: {dev['rssi']}")
+                print(f"\"{dev['mac']}\":{dev['rssi']}")
         else:
             print("No compliant beacons found")
 

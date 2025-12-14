@@ -4,7 +4,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 token = "HnJNerjV3H5ay1g8oPvyWqc6A3L4Rucl5SBjHZ8rRWC-8nJVKqeEMYjKB1qJ40Jwst8xvj05AdTCG6qTi2jNEQ=="
 org = "PBL3"
-url = "http://192.168.1.19:8086"
+url = "http://192.168.114.74:8086"
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 

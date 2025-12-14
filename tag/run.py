@@ -1,26 +1,22 @@
 import asyncio
 from Ble_conn import BleakBLEInterface
 from Data_processing import DataFilter
+from FileHandler import FileHandler
 from Tag import Tag
 
 
 async def main():
 
-    #todo zapis do pliku skanów 
-    #custom uuid whitelist
-    #z pliku 
-    TARGET_MACS = [
-        "C0:1A:14:25:CB:9B",
-        "75:AE:8B:09:53:E9"
-    ]
+    file_manager = FileHandler(whitelist_file="whitelist.txt", output_file="")
+    target_macs = file_manager.load_whitelist()
     
-    SCAN_DURATION = 5
+    SCAN_DURATION = 10
     ADV_DURATION = 10
     ADV_PERIOD_MS = 200
 
     try:
         ble_interface = BleakBLEInterface()
-        data_filter = DataFilter(target_macs=TARGET_MACS)
+        data_filter = DataFilter(target_macs=target_macs)
 
         tag = Tag(
             ble_adapter=ble_interface, #DI

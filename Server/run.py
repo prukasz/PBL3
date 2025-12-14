@@ -1,14 +1,14 @@
-
 import asyncio 
 from Mqtt_interface import MqttInterface
 from Mqtt_conn import PahoMQTTAdapter
-from Mqtt_services import PremiumBeacon, AlarmTag
+from Mqtt_services import ReceiveFromBeacons, AlarmTag
+from Radiomap import BLERadioMap
 
 async def main():
-    broker = PahoMQTTAdapter("192.168.114.74", 1883)
-
-    #simple serivces to test
-    beacon_handling = PremiumBeacon()
+    broker = PahoMQTTAdapter("192.168.1.19", 1883)
+    radio_map = BLERadioMap()
+    radio_map.load_data("scan_results_old.txt")
+    beacon_handling = ReceiveFromBeacons(radio_map)
     alarm_service = AlarmTag()
 
     app = MqttInterface(
@@ -17,16 +17,11 @@ async def main():
         publishers=[alarm_service]       # Publishers
     )
   
-    #run in backgroud
     interface_task = asyncio.create_task(app.start())
-
-    while True:
-        await alarm_service.trigger_alarm("Test2","Atakują")
-        await alarm_service.trigger_alarm("Test1","Legia pany")
-        await asyncio.sleep(5)
+    await interface_task
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+         asyncio.run(main())
     except KeyboardInterrupt:
         pass
