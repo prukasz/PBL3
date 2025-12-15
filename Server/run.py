@@ -5,7 +5,7 @@ from Mqtt_services import ReceiveFromBeacons, AlarmTag
 from Radiomap import BLERadioMap
 
 async def main():
-    broker = PahoMQTTAdapter("192.168.1.19", 1883)
+    broker = PahoMQTTAdapter("192.168.114.74", 1883)
     radio_map = BLERadioMap()
     radio_map.load_data("scan_results_old.txt")
     beacon_handling = ReceiveFromBeacons(radio_map)

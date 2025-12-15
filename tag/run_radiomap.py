@@ -19,7 +19,7 @@ async def main():
 
     try:
         ble_interface = BleakBLEInterface()
-        data_filter = DataFilter(target_macs=target_macs)
+        data_filter = DataFilter(target_macs=target_macs, my_mac = None)
 
         tag = Tag(
             ble_adapter=ble_interface,
