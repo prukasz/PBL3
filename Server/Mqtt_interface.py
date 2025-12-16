@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 from Mqtt_conn import MqttConnection
-from Mqtt_services import MqttReceiver, MqttPublisher # Make sure to import MqttPublisher!
+from Mqtt_services import MqttReceiver, MqttPublisher 
 
 class MqttInterface:
     def __init__(self, mqtt_client: MqttConnection, features: List[MqttReceiver] = [], publishers: List[MqttPublisher] = []): 

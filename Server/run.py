@@ -7,8 +7,10 @@ from Database import InfluxHandler
 
 async def main():
     # --- Configuration ---
-    MQTT_BROKER_IP = "192.168.114.74"
-    DB_URL = "http://192.168.114.74:8086"
+    #MQTT_BROKER_IP = "192.168.114.74"
+    MQTT_BROKER_IP = "10.242.193.176"
+    #DB_URL = "http://192.168.114.74:8086"
+    DB_URL = "http://10.242.193.176:8086"
     DB_TOKEN = "HnJNerjV3H5ay1g8oPvyWqc6A3L4Rucl5SBjHZ8rRWC-8nJVKqeEMYjKB1qJ40Jwst8xvj05AdTCG6qTi2jNEQ=="
     DB_ORG = "PBL3"
     DB_BUCKET = "Position"

@@ -3,7 +3,7 @@ import os
 import math
 
 # Configuration
-NOISE_FLOOR_DBM = -100.0 
+NOISE_FLOOR_DBM = -150.0 
 
 class RadioMap(ABC):
     """
@@ -87,7 +87,6 @@ class BLERadioMap(RadioMap):
                 clean_mac = mac_part.replace(':', '')
                 rssi_val = float(rssi_part)
                 
-                # STORE DBM DIRECTLY (No conversion to mW)
                 data_store.setdefault(clean_mac, []).append(rssi_val)
             except ValueError:
                 continue
@@ -133,7 +132,7 @@ class BLERadioMap(RadioMap):
 
         for pt, error in top_3:
             # Weight is inverse square of the dBm error
-            weight = 1.0 / (error**2) if error > 0.001 else 1000.0
+            weight = 1.0 / (error) if error > 0.001 else 1000.0
             weighted_x += pt.x * weight
             weighted_y += pt.y * weight
             total_weight += weight
@@ -144,50 +143,58 @@ class BLERadioMap(RadioMap):
 
     # --- Private Helpers ---
     def _parse_packet_hex(self, hex_string):
-        """Parses packet string into list of (MAC, RSSI_dBm)"""
         hex_string = hex_string.replace(" ", "").upper()
         parsed_scan = []
         block_size = 14
         
         for i in range(0, len(hex_string), block_size):
+
+            if len(parsed_scan) >= 3:
+                break
+
             block = hex_string[i:i+block_size]
-            if len(block) < 14: break
+            
+            if len(block) < 14:
+                break
+
+            if block == "00" * 7:
+                break
             
             mac_hex = block[:12]
-            # Parse RSSI (hex to signed int)
-            rssi_val = int(block[12:], 16)
-            if rssi_val > 127: rssi_val -= 256 
+            rssi_hex = block[12:]
             
-            parsed_scan.append((mac_hex, rssi_val))
+            try:
+                # Parse RSSI (hex to signed int)
+                rssi_val = int(rssi_hex, 16)
+                if rssi_val > 127: rssi_val -= 256 
+                
+                if mac_hex != "000000000000":
+                    parsed_scan.append((mac_hex, rssi_val))
+            except ValueError:
+                break
             
         return parsed_scan
+    def _calculate_rmse(self, live_fp, map_fp):
 
-    def _calculate_rmse(self, live_fp, map_fp):   
-        # Check how many beacons were actually found in this live scan
-        num_live = len(live_fp)
+        PENALTY_SQUARED = 2500.0 
 
-        # 1. Determine which MACs to compare
-        if 0 < num_live <= 2:
-            # SPARSE MODE: Only check the MACs we actually saw.
-            # We ignore any extra MACs in the map point so they don't add error.
-            comparison_macs = set(live_fp.keys())
-        else:
-            # STANDARD MODE: Check everything (Union of sets).
-            # This penalizes the score if the map has beacons the live scan missed.
-            comparison_macs = set(live_fp.keys()) | set(map_fp.keys())
-
+        comparison_macs = list(live_fp.keys())
+        
         if not comparison_macs:
             return float('inf')
 
         sum_squared_error = 0.0
         
         for mac in comparison_macs:
-            val_live = live_fp.get(mac, NOISE_FLOOR_DBM)
-            val_map = map_fp.get(mac, NOISE_FLOOR_DBM)
-            
-            # Difference in dBm
-            diff = val_live - val_map
-            sum_squared_error += (diff ** 2)
-            
+            if mac in map_fp:
+                # MATCH: Calculate actual signal difference
+                val_live = live_fp[mac]
+                val_map = map_fp[mac]
+                diff = val_live - val_map
+                sum_squared_error += (diff ** 2)
+            else:
+                sum_squared_error += PENALTY_SQUARED
+        
+        # Calculate standard RMSE
         mse = sum_squared_error / len(comparison_macs)
         return math.sqrt(mse)
