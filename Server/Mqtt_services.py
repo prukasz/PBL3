@@ -3,8 +3,9 @@ from Mqtt_conn import MqttConnection
 from typing import List, Tuple
 from pprint import pprint
 import asyncio
-# Import the interface, not the concrete implementation
 from Radiomap import RadioMap 
+# Import the Database Handler
+from Database import InfluxHandler
 
 class MqttReceiver(ABC):
     @property
@@ -18,21 +19,36 @@ class MqttReceiver(ABC):
         pass
 
 class ReceiveFromBeacons(MqttReceiver):
-    def __init__(self, radio_map: RadioMap):
+    def __init__(self, radio_map: RadioMap, db_handler: InfluxHandler):
         """
-        Dependency Injection: We ask for a RadioMap class in the constructor.
-        The map should already be loaded.
+        Dependency Injection: We ask for RadioMap AND Database Handler.
         """
         self.radio_map = radio_map
+        self.db = db_handler
 
     @property
     def topic(self) -> str:
+        # Listening to floor/MAC_ADDRESS
         return "floor/#"
 
     async def handle_message(self, topic: str, payload: str):
+        # 1. Calculate Position
         result = self.radio_map.get_position(payload)
-        print(f"Received on {topic.strip('floor/')}, data: {payload}")
-        pprint(result)
+        
+        # 2. Extract Data
+        # Topic format is usually: floor/AA:BB:CC:11:22:33
+        # We strip "floor/" to get the clean MAC
+        mac_address = topic.replace("floor/", "")
+        
+        if result:
+            x, y, label = result  # Unpack tuple (x, y, label), ignoring label
+            
+            print(f"Received from {mac_address} -> Pos: ({x}, {y}), label {label}")
+            
+            # 3. Write to InfluxDB
+            self.db.write_position(mac_address, x, y)
+        else:
+            print(f"Received from {mac_address} -> Position calculation failed.")
 
 class MqttPublisher(ABC):
     @abstractmethod

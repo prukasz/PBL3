@@ -113,7 +113,7 @@ class BLERadioMap(RadioMap):
         # 2. Convert to dict
         live_fp_dbm = {mac: rssi for mac, rssi in live_scan_list}
         
-        # 3. Calculate RMSE for ALL points (using dBm differences)
+        #   
         scored_points = []
         for point in self.points:
             rmse = self._calculate_rmse(live_fp_dbm, point.fingerprints)
@@ -162,12 +162,26 @@ class BLERadioMap(RadioMap):
             
         return parsed_scan
 
-    def _calculate_rmse(self, live_fp, map_fp):
-        """Calculates Root Mean Squared Error in dBm"""
-        all_macs = set(live_fp.keys()) | set(map_fp.keys())
+    def _calculate_rmse(self, live_fp, map_fp):   
+        # Check how many beacons were actually found in this live scan
+        num_live = len(live_fp)
+
+        # 1. Determine which MACs to compare
+        if 0 < num_live <= 2:
+            # SPARSE MODE: Only check the MACs we actually saw.
+            # We ignore any extra MACs in the map point so they don't add error.
+            comparison_macs = set(live_fp.keys())
+        else:
+            # STANDARD MODE: Check everything (Union of sets).
+            # This penalizes the score if the map has beacons the live scan missed.
+            comparison_macs = set(live_fp.keys()) | set(map_fp.keys())
+
+        if not comparison_macs:
+            return float('inf')
+
         sum_squared_error = 0.0
         
-        for mac in all_macs:
+        for mac in comparison_macs:
             val_live = live_fp.get(mac, NOISE_FLOOR_DBM)
             val_map = map_fp.get(mac, NOISE_FLOOR_DBM)
             
@@ -175,5 +189,5 @@ class BLERadioMap(RadioMap):
             diff = val_live - val_map
             sum_squared_error += (diff ** 2)
             
-        mse = sum_squared_error / len(all_macs) if all_macs else float('inf')
+        mse = sum_squared_error / len(comparison_macs)
         return math.sqrt(mse)
