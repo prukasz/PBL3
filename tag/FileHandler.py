@@ -23,7 +23,7 @@ class FileHandler:
         if not beacons:
             line = "None\n"
         else:
-            # List comprehension to format: MAC:RSSI
+            #Format MAC RSSI
             formatted_data = [f"{b['mac']}:{b['rssi']}" for b in beacons]
             line = ", ".join(formatted_data) + "\n"
         

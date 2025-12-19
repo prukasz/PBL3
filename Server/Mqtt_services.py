@@ -11,7 +11,7 @@ class MqttReceiver(ABC):
     @property
     @abstractmethod
     def topic(self) -> str:
-        """The topic this feature wants to listen to."""
+        """The topic this feature wants to listen to"""
         pass
 
     @abstractmethod
@@ -21,31 +21,28 @@ class MqttReceiver(ABC):
 class ReceiveFromBeacons(MqttReceiver):
     def __init__(self, radio_map: RadioMap, db_handler: InfluxHandler):
         """
-        Dependency Injection: We ask for RadioMap AND Database Handler.
+        Dependency Injection: We ask for RadioMap AND Database Handler
         """
         self.radio_map = radio_map
         self.db = db_handler
 
     @property
     def topic(self) -> str:
-        # Listening to floor/MAC_ADDRESS
+        # Listening to floor/floor_x/MAC_ADDRESS
         return "floor/#"
 
     async def handle_message(self, topic: str, payload: str):
-        # 1. Calculate Position
+        # Calculate Position
         result = self.radio_map.get_position(payload)
-        
-        # 2. Extract Data
-        # Topic format is usually: floor/AA:BB:CC:11:22:33
-        # We strip "floor/" to get the clean MAC
-        mac_address = topic.replace("floor/", "")
+    
+        #Strip "floor/......" to get the clean MAC
+        mac_address = topic[-12:]
         
         if result:
-            x, y, label = result  # Unpack tuple (x, y, label), ignoring label
-            
+            x, y, label = result
             print(f"Received from {mac_address} -> Pos: ({x}, {y}), label {label}")
             
-            # 3. Write to InfluxDB
+            # Write to InfluxDB
             self.db.write_position(mac_address, x, y)
         else:
             print(f"Received from {mac_address} -> Position calculation failed.")

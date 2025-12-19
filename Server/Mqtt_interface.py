@@ -15,19 +15,19 @@ class MqttInterface:
         if not success:
             return
         
-        print("Setting u receivers")
+        print("[MqttInterface] Setting up receivers")
         for feature in self.features:
             #pass topic and callback
             await self.mqtt.subscribe(feature.topic, feature.handle_message)
             print(f"Listening: {feature.__class__.__name__} on {feature.topic}")
 
-        print("Setting up publishers")
+        print("[MqttInterface] Setting up publishers")
         for pub in self.publishers:
             #each publish service will have own task in background
             asyncio.create_task(pub.execute(self.mqtt))
-            print(f"Publishing {pub.__class__.__name__}")
+            print(f"[MqttInterface] Publishing {pub.__class__.__name__}")
 
-
+        #DEBUG Tell that server is online
         await self.mqtt.publish("Server/status", "Server Online")
 
         while True:

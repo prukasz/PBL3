@@ -6,26 +6,26 @@ from Radiomap import BLERadioMap
 from Database import InfluxHandler
 
 async def main():
-    # --- Configuration ---
-    #MQTT_BROKER_IP = "192.168.114.74"
-    MQTT_BROKER_IP = "10.242.193.176"
-    #DB_URL = "http://192.168.114.74:8086"
-    DB_URL = "http://10.242.193.176:8086"
+    #Temporary config 
+    #ip są w ten sposób ponieważ używane było wiele różnch sieci
+    MQTT_BROKER_IP = "192.168.114.74"
+    MQTT_PORT = 1883
+    DB_URL = "http://192.168.114.74:8086"
     DB_TOKEN = "HnJNerjV3H5ay1g8oPvyWqc6A3L4Rucl5SBjHZ8rRWC-8nJVKqeEMYjKB1qJ40Jwst8xvj05AdTCG6qTi2jNEQ=="
     DB_ORG = "PBL3"
     DB_BUCKET = "Position"
 
-    # 1. Initialize Adapters
-    broker = PahoMQTTAdapter(MQTT_BROKER_IP, 1883)
+    #Initialize Adapters
+    broker = PahoMQTTAdapter(MQTT_BROKER_IP, MQTT_PORT)
     
-    # 2. Initialize Database
+    #Initialize Database
     db_handler = InfluxHandler(DB_URL, DB_TOKEN, DB_ORG, DB_BUCKET)
 
-    # 3. Initialize Domain Logic
+    #Initialize Domain Logic
     radio_map = BLERadioMap()
-    radio_map.load_data("scan_results2.txt")
+    radio_map.load_data("radiomap.txt")
     
-    # 4. Initialize Services (Inject Dependencies)
+    #Services
     beacon_handling = ReceiveFromBeacons(radio_map, db_handler)
     alarm_service = AlarmTag()
 
@@ -37,9 +37,22 @@ async def main():
   
     try:
         interface_task = asyncio.create_task(app.start())
-        await interface_task
+        
+        #Get current event loop
+        loop = asyncio.get_running_loop()
+        print("System started. Type 'alarm' to test")
+
+        while True:
+            # Run blocking 'input' in a separate thread so it doesn't freeze the app
+            user_input = await loop.run_in_executor(None, input)
+            
+
+            #this is for debug/show purposes only
+            if "alarm" in user_input.lower():
+                print("Triggering Alarm")
+                await alarm_service.trigger_alarm("alarm", "B827EB0F88D0FFDDFF")
+
     finally:
-        # Ensure database closes cleanly on exit
         db_handler.close()
 
 if __name__ == "__main__":

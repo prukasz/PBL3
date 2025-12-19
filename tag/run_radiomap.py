@@ -26,7 +26,8 @@ async def main():
             data_processor=data_filter,
             scan_time=SCAN_DURATION,
             adv_time=ADV_DURATION,
-            adv_period=ADV_PERIOD_MS
+            adv_period=ADV_PERIOD_MS,
+            mpu_handler= None
         )
 
         print("Type 'S' to scan point, 'H' to set header, 'Q' to quit.")

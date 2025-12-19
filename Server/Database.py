@@ -18,13 +18,13 @@ class InfluxHandler:
 
     def write_position(self, mac_address: str, x: float, y: float):
         """
-        Stores the X, Y position for a specific Tag MAC.
-        Measurement name is 'TagPosition'.
+        Stores the X, Y position for a specific Tag MAC
+        Measurement name is 'TagPosition'
         """
         try:
             point = (
                 Point("TagPosition")
-                .tag("mac", mac_address)  # Indexed for fast searching
+                .tag("mac", mac_address) 
                 .field("x", float(x))
                 .field("y", float(y))
                 .time(datetime.utcnow(), WritePrecision.MS)
@@ -39,7 +39,7 @@ class InfluxHandler:
 
     def get_history(self, mac_address: str, time_range: str = "-1h"):
         """
-        Retrieves the location history for a specific MAC.
+        Retrieves the location history for a specific MAC
         time_range examples: "-10m", "-1h", "-24h", "-30d"
         """
         query = f'''
@@ -72,32 +72,3 @@ class InfluxHandler:
 
     def close(self):
         self.client.close()
-
-# --- Example Usage ---
-if __name__ == "__main__":
-    # Configuration
-    TOKEN = "HnJNerjV3H5ay1g8oPvyWqc6A3L4Rucl5SBjHZ8rRWC-8nJVKqeEMYjKB1qJ40Jwst8xvj05AdTCG6qTi2jNEQ=="
-    ORG = "PBL3"
-    URL = "http://192.168.1.19:8086"
-    BUCKET = "Position"
-
-    db = InfluxHandler(URL, TOKEN, ORG, BUCKET)
-
-    # 1. Write Data (Simulate a moving tag)
-    my_mac = "AA:BB:CC:11:22:33"
-    
-    print("Writing dummy data...")
-    db.write_position(my_mac, 10.5, 5.2)
-    time.sleep(1)
-    db.write_position(my_mac, 12.0, 6.8)
-    time.sleep(1)
-    db.write_position(my_mac, 14.2, 8.1)
-
-    # 2. Read Data
-    print(f"\nRetrieving history for {my_mac}...")
-    history = db.get_history(my_mac, time_range="-5m")
-    
-    for record in history:
-        print(f"Time: {record['time']} | Pos: ({record['x']}, {record['y']})")
-    
-    db.close()

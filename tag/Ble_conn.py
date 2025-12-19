@@ -75,7 +75,20 @@ class BleakBLEInterface(BLEInterface):
             await asyncio.sleep(duration)
             await scanner.stop()  
             
-            return list(self.__found_devices.values())
+            #Avreaging
+            results = []
+            for device_data in self.__found_devices.values():
+                # Extract history and calculate average
+                history = device_data.pop('rssi_history', [])
+                if history:
+                    avg_rssi = sum(history) / len(history)
+                    device_data['rssi'] = round(avg_rssi, 2)
+                else:
+                    device_data['rssi'] = -100
+
+                results.append(device_data)
+            
+            return results
             
         except Exception as e:
             print(f"[BLE] SCAN CRASHED: {e}")
@@ -85,14 +98,20 @@ class BleakBLEInterface(BLEInterface):
 
     def __scan_callback(self, device: BLEDevice, adv_data: AdvertisementData):
         if device.address not in self.__found_devices:
+            # First time seeing this device: initialize list
             self.__found_devices[device.address] = {
                 'mac': device.address,
-                'rssi': adv_data.rssi,
+                'rssi_history': [adv_data.rssi], # Start history list
                 'name': device.name or "N/A",
                 'uuid': adv_data.service_uuids,
                 'txpow': adv_data.tx_power,
                 'mdata': adv_data.manufacturer_data
             }
+        else:
+            self.__found_devices[device.address]['rssi_history'].append(adv_data.rssi)
+            #Update name if it appears later
+            if self.__found_devices[device.address]['name'] == "N/A" and device.name:
+                self.__found_devices[device.address]['name'] = device.name
     
     async def advertise(self, time: int, period: int, payload: str) -> bool:
         if BleakBLEInterface._is_advertising or BleakBLEInterface._is_scanning:

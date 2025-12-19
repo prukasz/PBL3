@@ -36,10 +36,10 @@ class PahoMQTTAdapter(MqttConnection):
             
             # Start Paho    
             self.client.loop_start()
-            print(f"Connected to {self.broker_address}")
+            print(f"[PahoMQTTAdapter] Connected to {self.broker_address}")
             return True
         except Exception as e:
-            print(f"Connection failed: {e}")
+            print(f"[PahoMQTTAdapter]Connection failed: {e}")
             return False
 
     def _blocking_connect(self):
@@ -53,12 +53,12 @@ class PahoMQTTAdapter(MqttConnection):
             publish.wait_for_publish(timeout=2) 
             return publish.rc == mqtt.MQTT_ERR_SUCCESS
         except Exception as e:
-            print(f"Publish error: {e}")
+            print(f"[PahoMQTTAdapter]Publish error: {e}")
             return False
 
     async def subscribe(self, topic: str, callback: MessageCallback) -> bool:
         if not self._loop:
-            print("Error: Event loop not captured. Call connect() first.")
+            print("[PahoMQTTAdapter] Error: Event loop not captured")
             return False
 
         def paho_thread_wrapper(client, userdata, message):
@@ -75,12 +75,12 @@ class PahoMQTTAdapter(MqttConnection):
        
         result, _ = self.client.subscribe(topic)
         if result == mqtt.MQTT_ERR_SUCCESS:
-            print(f"Subscribed to topic: '{topic}'")
+            print(f"[PahoMQTTAdapter]Subscribed to topic: '{topic}'")
             return True
         return False
 
     async def disconnect(self) -> bool:
         self.client.loop_stop() 
         self.client.disconnect()
-        print("Disconnected")
+        print("[PahoMQTTAdapter] Disconnected")
         return True

@@ -18,7 +18,7 @@ class MpuHandler:
         self.REG_INT_STATUS   = 0x3A 
 
     def initialize(self):
-        print(f"[MPU] Initializing on Pin {self.pin}...")
+        print(f"[MPU] Initializing interrupt on pin {self.pin}")
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         
@@ -31,7 +31,6 @@ class MpuHandler:
         self.sensor.bus.write_byte_data(self.address, self.REG_MOT_THR, 15)        # Threshold
         self.sensor.bus.write_byte_data(self.address, self.REG_MOT_DUR, 40)        # Duration
         self.sensor.bus.write_byte_data(self.address, self.REG_INT_ENABLE, 0x40)
-        print("[MPU] Hardware initialized.")
 
     def register_callback(self, callback_func):
         self.callback = callback_func
@@ -43,7 +42,7 @@ class MpuHandler:
             
             #Add GPIO event
             GPIO.add_event_detect(self.pin, GPIO.RISING, callback=self._internal_interrupt_handler)
-            print("[MPU] Listening for motion...")
+            print("[MPU] Listening for motion")
         except Exception as e:
             print(f"[MPU] Failed to start detection: {e}")
 

@@ -23,23 +23,23 @@ class DataFilter(DataProcessor):
     def get_specific_beacons(self, devices: List[Dict]) -> List[Dict]:
         specific_beacons = []
         eddystone_uuid_part = "feaa"
-        CONST_MANUFACTURER_ID = 65279 # 0xFF00
+        CONST_MANUFACTURER_ID = 65279 
 
         for device in devices:
             is_match = False
             
-            # 1. Whitelist Check
+            #Whitelist Check
             if self.target_macs and device['mac'] in self.target_macs:
                 mdata = device.get('mdata', {})
-                # FIX: Check if key exists before accessing
+                #Check if key exists before accessing
                 manufacturer_bytes = mdata.get(CONST_MANUFACTURER_ID)
                 
                 if manufacturer_bytes:
                     str_hex = (''.join(f'{b:02X}' for b in manufacturer_bytes)).replace(' ', '')
                     if str_hex.startswith(self.my_mac):
-                        print(f'alarm: {str_hex.strip(self.my_mac)}')
-                    is_match = True
-            
+                        print(f'alarm: {str_hex}')
+                    is_match = False
+                
             # 2. Eddystone Check
             elif device.get('uuid'):
                 for uuid in device['uuid']:
