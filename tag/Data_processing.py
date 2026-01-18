@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
 import struct
+import SSD1306Handler
+import pprint
+import asyncio
 
 class DataProcessor(ABC):
     @abstractmethod
@@ -15,6 +18,7 @@ class DataFilter(DataProcessor):
         super().__init__()
         self.target_macs = target_macs
         self.my_mac = my_mac
+        self.oled_handler = SSD1306Handler.OLEDDisplay(alarm_duration=3.0)
     
     def sort_by_rssi(self, devices: List[Dict]) -> List[Dict]:
         valid_beacons = [d for d in devices if d.get('rssi') is not None]
@@ -23,8 +27,9 @@ class DataFilter(DataProcessor):
     def get_specific_beacons(self, devices: List[Dict]) -> List[Dict]:
         specific_beacons = []
         eddystone_uuid_part = "feaa"
-        CONST_MANUFACTURER_ID = 65279 
+        CONST_MANUFACTURER_ID = 65279
 
+        pprint.pprint(devices)
         for device in devices:
             is_match = False
             
@@ -33,11 +38,14 @@ class DataFilter(DataProcessor):
                 mdata = device.get('mdata', {})
                 #Check if key exists before accessing
                 manufacturer_bytes = mdata.get(CONST_MANUFACTURER_ID)
+
                 
                 if manufacturer_bytes:
                     str_hex = (''.join(f'{b:02X}' for b in manufacturer_bytes)).replace(' ', '')
+                    room_number = str(int.from_bytes(manufacturer_bytes[6:8], byteorder='big'))
                     if str_hex.startswith(self.my_mac):
-                        print(f'alarm: {str_hex}')
+                        print(f'alarm: {str_hex[0:12]}')
+                        asyncio.create_task(self.oled_handler.show_alarm(room_number))
                     is_match = False
                 
             # 2. Eddystone Check
