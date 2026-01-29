@@ -6,6 +6,7 @@ import asyncio
 from Radiomap import RadioMap 
 # Import the Database Handler
 from Database import InfluxHandler
+from tag_mapping import get_name_by_mac
 
 class MqttReceiver(ABC):
     @property
@@ -37,15 +38,17 @@ class ReceiveFromBeacons(MqttReceiver):
     
         #Strip "floor/......" to get the clean MAC
         mac_address = topic[-12:]
+        tag_name = get_name_by_mac(mac_address)
         
         if result:
             x, y, label = result
-            print(f"Received from {mac_address} -> Pos: ({x}, {y}), label {label}")
-            
+            print(f"Received from {tag_name} ({mac_address}) -> Pos: ({x}, {y}), label {label}")
+            if(not result):
+                pprint(result)
             # Write to InfluxDB
             self.db.write_position(mac_address, x, y)
         else:
-            print(f"Received from {mac_address} -> Position calculation failed.")
+            print(f"Received from {tag_name} ({mac_address}) -> Position calculation failed.")
 
 class MqttPublisher(ABC):
     @abstractmethod

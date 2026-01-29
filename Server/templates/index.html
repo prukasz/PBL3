@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Tag Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯ESSA</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status-indicator">●</span>
+                <span id="status-text">Łączenie...</span>
+                <span class="tag-count">Aktywnych tagów: <strong id="tag-count">0</strong></span>
+            </div>
+        </header>
+
+        <main>
+            <div class="map-container">
+                <div class="map-wrapper" id="map-wrapper">
+                    <img src="/static/plan_img.png" alt="Plan budynku" id="floor-map">
+                    <div class="tags-layer" id="tags-layer">
+                        <!-- Tags will be dynamically added here -->
+                    </div>
+                    <div class="history-layer" id="history-layer">
+                        <!-- History points will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="panel">
+                    <h2>📍 Aktywne Tagi</h2>
+                    <ul id="tag-list" class="tag-list">
+                        <!-- Tags will be listed here -->
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h2>📜 Historia</h2>
+                    <div class="history-controls">
+                        <label for="history-range">Zakres czasu:</label>
+                        <select id="history-range">
+                            <option value="-10m">Ostatnie 10 minut</option>
+                            <option value="-30m">Ostatnie 30 minut</option>
+                            <option value="-1h" selected>Ostatnia godzina</option>
+                            <option value="-3h">Ostatnie 3 godziny</option>
+                            <option value="-24h">Ostatnie 24 godziny</option>
+                        </select>
+                        <button id="show-history-btn" class="btn btn-secondary" disabled>
+                            Pokaż historię
+                        </button>
+                        <button id="clear-history-btn" class="btn btn-outline">
+                            Wyczyść
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>ℹ️ Informacje</h2>
+                    <div id="tag-info" class="tag-info">
+                        <p class="placeholder">Wybierz tag, aby zobaczyć szczegóły</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Alarm Modal -->
+    <div id="alarm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔔 Wyślij Alarm</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Tag: <strong id="alarm-tag-mac"></strong></p>
+                <label for="room-select">Wybierz pokój:</label>
+                <select id="room-select">
+                    {% for room in rooms %}
+                    <option value="{{ room }}">{{ room }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button id="send-alarm-btn" class="btn btn-danger">
+                    Wyślij Alarm
+                </button>
+                <button id="cancel-alarm-btn" class="btn btn-outline">
+                    Anuluj
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
