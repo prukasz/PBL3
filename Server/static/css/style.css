@@ -1,19 +1,20 @@
-/* CSS Reset and Variables */
+/* CSS Reset and Variables - ESSA Theme */
 :root {
-    --primary-color: #3498db;
-    --primary-dark: #2980b9;
+    --primary-color: #F06C63;
+    --primary-dark: #D85A52;
     --danger-color: #e74c3c;
     --danger-dark: #c0392b;
     --success-color: #27ae60;
     --warning-color: #f39c12;
-    --bg-color: #1a1a2e;
-    --bg-secondary: #16213e;
-    --bg-card: #1f2940;
-    --text-color: #ecf0f1;
-    --text-muted: #95a5a6;
-    --border-color: #34495e;
-    --tag-color: #e74c3c;
-    --history-color: #3498db;
+    --bg-color: #3D3D3D;
+    --bg-secondary: #4A4A4A;
+    --bg-card: #555555;
+    --text-color: #FFFFFF;
+    --text-muted: #B0B0B0;
+    --border-color: #666666;
+    --tag-color: #F06C63;
+    --history-color: #F06C63;
+    --accent-color: #F06C63;
 }
 
 * {
@@ -47,9 +48,21 @@ header {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
+.logo-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    height: 65px;
+    width: auto;
+}
+
 header h1 {
     font-size: 1.5rem;
     font-weight: 600;
+    color: var(--primary-color);
 }
 
 .status-bar {

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <ellipse cx="60" cy="40" rx="55" ry="35" fill="#F06C63"/>
+  <text y="52" font-family="Arial Black, Arial, sans-serif" font-size="32" font-weight="bold">
+    <tspan x="12" fill="#FFFFFF">E</tspan>
+    <tspan x="35" fill="#3D3D3D">S</tspan>
+    <tspan x="55" fill="#3D3D3D">S</tspan>
+    <tspan x="78" fill="#FFFFFF">A</tspan>
+  </text>
+</svg>
