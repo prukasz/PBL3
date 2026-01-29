@@ -2,6 +2,7 @@ import board
 import asyncio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
+from BuzzerHandler import BuzzerHandler
 
 
 class OLEDDisplay:
@@ -18,8 +19,7 @@ class OLEDDisplay:
         i2c = board.I2C()
         self.oled = adafruit_ssd1306.SSD1306_I2C(width, height, i2c, addr=i2c_address)
         
-
-        self.font = ImageFont.load_default()
+        self.font = ImageFont.load_default(size=18)
 
         self.clear()
         
@@ -91,14 +91,15 @@ class OLEDDisplay:
         
         return lines if lines else [text]
     
-    async def show_alarm(self, message):
-
+    async def show_alarm(self, message, buzzer=None):
         image = self._create_alarm_image(message)
         
         self.oled.image(image)
         self.oled.show()
         
-        await asyncio.sleep(self.alarm_duration)
+        if buzzer:
+            await buzzer.alarm_pattern(beeps=10)
         
+        await asyncio.sleep(self.alarm_duration)
         self.clear()
 

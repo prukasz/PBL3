@@ -4,6 +4,9 @@ import struct
 import SSD1306Handler
 import pprint
 import asyncio
+from BuzzerHandler import BuzzerHandler
+
+buzzer = BuzzerHandler(pin=18)
 
 class DataProcessor(ABC):
     @abstractmethod
@@ -18,7 +21,7 @@ class DataFilter(DataProcessor):
         super().__init__()
         self.target_macs = target_macs
         self.my_mac = my_mac
-        self.oled_handler = SSD1306Handler.OLEDDisplay(alarm_duration=3.0)
+        self.oled_handler = SSD1306Handler.OLEDDisplay(alarm_duration=10.0)
     
     def sort_by_rssi(self, devices: List[Dict]) -> List[Dict]:
         valid_beacons = [d for d in devices if d.get('rssi') is not None]
@@ -36,19 +39,18 @@ class DataFilter(DataProcessor):
             #Whitelist Check
             if self.target_macs and device['mac'] in self.target_macs:
                 mdata = device.get('mdata', {})
-                #Check if key exists before accessing
                 manufacturer_bytes = mdata.get(CONST_MANUFACTURER_ID)
 
                 
                 if manufacturer_bytes:
                     str_hex = (''.join(f'{b:02X}' for b in manufacturer_bytes)).replace(' ', '')
-                    room_number = str(int.from_bytes(manufacturer_bytes[6:8], byteorder='big'))
+                    room_number = manufacturer_bytes[6:].decode('ascii')
                     if str_hex.startswith(self.my_mac):
                         print(f'alarm: {str_hex[0:12]}')
-                        asyncio.create_task(self.oled_handler.show_alarm(room_number))
+                        asyncio.create_task(self.oled_handler.show_alarm(room_number, buzzer = buzzer))
                     is_match = False
                 
-            # 2. Eddystone Check
+            # Eddystone Check
             elif device.get('uuid'):
                 for uuid in device['uuid']:
                     if eddystone_uuid_part in uuid.lower():

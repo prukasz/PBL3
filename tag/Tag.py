@@ -40,7 +40,6 @@ class Tag:
                 await self.motion_event.wait()
                 self.motion_event.clear()
                 
-                # Run the cycle
                 await self.advertise_latest_beacons()
 
                 print("[TAG] Advertise cycle complete")
@@ -102,3 +101,13 @@ class Tag:
                     print(f"[TAG] Advertise Error: {e}")
             else:
                 print("[TAG] No beacons to advertise")
+
+    async def scan_only(self):
+        try:
+            raw_beacons = await self.ble.scan(duration=self.scan_time)
+            filtered_beacons = self.processor.get_specific_beacons(raw_beacons)
+            sorted_beacons = self.processor.sort_by_rssi(filtered_beacons)
+            return sorted_beacons
+        except Exception as e:
+            print(f"[TAG] Scan Error: {e}")
+            return []

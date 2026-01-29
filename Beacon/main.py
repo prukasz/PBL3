@@ -18,7 +18,7 @@ async def main():
         ble_interface = BleakBLEInterface()
         data_filter = BeaconDataFilter()
         wifi_interface = WifiConn()
-        mqtt_interface = MQTTInterfacePaho(broker_address="192.168.0.248", broker_port=1883, on_message_callback=None)
+        mqtt_interface = MQTTInterfacePaho(broker_address="192.168.114.74", broker_port=1883, on_message_callback=None)
 
         beacon = Beacon(
             ble_adapter=ble_interface, #DI

@@ -10,20 +10,17 @@ async def main():
     file_manager = FileHandler(whitelist_file="whitelist.txt", output_file="")
     target_macs = file_manager.load_whitelist()
     
-    SCAN_DURATION = 10
-    ADV_DURATION = 10
+    SCAN_DURATION = 5
+    ADV_DURATION = 5
     ADV_PERIOD_MS = 200
     INTERRUPT_PIN = 17
 
     try:
-        # Initialize BLE
         ble_interface = BleakBLEInterface()
         await ble_interface.initialize()
-        
-        # Initialize Data Filter
-        data_filter = DataFilter(target_macs=target_macs, my_mac=ble_interface.mac)
 
-        # Initialize MPU 
+        data_filter = DataFilter(target_macs=target_macs, my_mac=ble_interface.mac)
+        
         mpu = MpuHandler(pin=INTERRUPT_PIN)
         mpu.initialize()
 

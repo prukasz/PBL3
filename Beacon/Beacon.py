@@ -9,19 +9,20 @@ import subprocess
 
 
 class Beacon:
+    ALARM_REPEAT_COUNT = 3  # Number of cycles to repeat alarm
+    
     def __init__(self, wifi_adapter: WifiInterface, ble_adapter: BLEInterface, data_processor: BeaconDataProcessor, mqtt_client: MQTTInterface, adv_time: int, adv_period: int, scan_time: int, loop=None):
-        self.ble = ble_adapter  # Dependency Injection
-        self.processor = data_processor  # Dependency Injection
+        self.ble = ble_adapter
+        self.processor = data_processor
         self.scan_time = scan_time
         self.adv_time = adv_time
         self.adv_period = adv_period
-        self.wifi = wifi_adapter  # Dependency Injection
-        self.mqtt = mqtt_client  # Dependency Injection
+        self.wifi = wifi_adapter
+        self.mqtt = mqtt_client
         self.loop = loop  # Event loop for MQTT callback from different thread
         
-        # Alarm queue system
         self.alarm_queue = asyncio.Queue()  # Queue for incoming alarms
-        self.current_alarm = None  # Track current alarm being processed
+        self.current_alarm = None  # Track current alarm being processed (dict with payload and remaining)
         
         if hasattr(self.mqtt, 'client'):
             self.mqtt.client.on_message = self.on_message
@@ -49,22 +50,20 @@ class Beacon:
             print("[Beacon] Warning: Event loop not set, cannot trigger advertising")
     
     async def add_alarm_to_queue(self, payload: str):
-        # Check if this alarm is already in the queue or being processed
-        if self.current_alarm == payload:
+        if self.current_alarm and self.current_alarm['payload'] == payload:
             print(f"[Beacon] Alarm already being processed, ignoring: {payload}")
             return
         
-        # Check if alarm is already in queue (peek at queue items)
         queue_items = list(self.alarm_queue._queue)
-        if payload in queue_items:
+        if any(item['payload'] == payload for item in queue_items):
             print(f"[Beacon] Alarm already in queue, ignoring: {payload}")
             return
         
-        await self.alarm_queue.put(payload)
-        print(f"[Beacon] Alarm added to queue: {payload} (Queue size: {self.alarm_queue.qsize()})")
+        alarm_item = {'payload': payload, 'remaining': self.ALARM_REPEAT_COUNT}
+        await self.alarm_queue.put(alarm_item)
+        print(f"[Beacon] Alarm added to queue: {payload}, Queue size: {self.alarm_queue.qsize()})")
 
     async def run_cycle(self): 
-        # SCAN phase
         print(f"[Beacon] Scanning for {self.scan_time} seconds")
         raw_devices = await self.ble.scan(duration=self.scan_time)
 
@@ -85,25 +84,33 @@ class Beacon:
             Topic = f"floor/{beacon_mac}/{dev['mac'].replace(":","")}"
             await self.mqtt.publish(Topic, ''.join(['' + data.hex() for data in dev['mdata'].values()]), 1)
 
-        if not self.alarm_queue.empty():
-            print(f"[Beacon] Alarm queue not empty, advertising first alarm from the queue")
-            payload = await self.alarm_queue.get()
-            self.current_alarm = payload
+        if self.current_alarm is None and not self.alarm_queue.empty():
+            self.current_alarm = await self.alarm_queue.get()
+            print(f"[Beacon] Starting new alarm: {self.current_alarm['payload']} ({self.current_alarm['remaining']} cycles)")
+
+        if self.current_alarm is not None:
+            payload = self.current_alarm['payload']
+            remaining = self.current_alarm['remaining']
 
             formatted_payload = self.processor.get_alarm_payload(payload)
-            print(f"[Beacon] Formatted payload: {formatted_payload}")
+            print(f"[Beacon] Advertising alarm: {payload} (cycle {self.ALARM_REPEAT_COUNT - remaining + 1}/{self.ALARM_REPEAT_COUNT})")
 
             success = await self.ble.advertise(
                 time=self.adv_time, 
                 period=self.adv_period, 
                 payload=formatted_payload
             )
-            self.current_alarm = None
+            
             if success:
                 print(f"[Beacon] Alarm advertising finished successfully: {payload}")
+                self.current_alarm['remaining'] -= 1
+                if self.current_alarm['remaining'] <= 0:
+                    print(f"[Beacon] Alarm completed all {self.ALARM_REPEAT_COUNT} cycles: {payload}")
+                    self.current_alarm = None
+                else:
+                    print(f"[Beacon] Alarm will continue: {payload} ({self.current_alarm['remaining']} cycles remaining)")
             else:
-                print(f"[Beacon] Alarm advertising failed: {payload}")
-                self.add_alarm_to_queue(payload)  # Re-add to queue on fail
+                print(f"[Beacon] Alarm advertising failed: {payload}, will retry next cycle")
             return
         else:
             print("[Beacon] No alarms in queue, advertising hollow package for rssi")
@@ -119,8 +126,6 @@ class Beacon:
                 print(f"[Beacon] Hollow advertising finished successfully")
             else:
                 print(f"[Beacon] Hollow advertising failed")
-            
-            
 
 
         

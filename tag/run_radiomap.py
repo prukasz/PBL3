@@ -7,11 +7,11 @@ from FileHandler import FileHandler
 SCAN_DURATION = 10    
 ADV_DURATION = 1     
 ADV_PERIOD_MS = 200
-POINT_SCAN_CNT = 3
+POINT_SCAN_CNT = 5
 
 async def main():
     
-    file_manager = FileHandler(whitelist_file="whitelist.txt", output_file="scan_results.txt")
+    file_manager = FileHandler(whitelist_file="whitelist.txt", output_file="scan_results2.txt")
     
     target_macs = file_manager.load_whitelist()
     if not target_macs:
@@ -19,21 +19,23 @@ async def main():
 
     try:
         ble_interface = BleakBLEInterface()
-        data_filter = DataFilter(target_macs=target_macs, my_mac = None)
+        await ble_interface.initialize()
+        
+        data_filter = DataFilter(target_macs=target_macs, my_mac=ble_interface.mac)
 
         tag = Tag(
             ble_adapter=ble_interface,
             data_processor=data_filter,
+            mpu_handler=None,
             scan_time=SCAN_DURATION,
             adv_time=ADV_DURATION,
-            adv_period=ADV_PERIOD_MS,
-            mpu_handler= None
+            adv_period=ADV_PERIOD_MS
         )
 
         print("Type 'S' to scan point, 'H' to set header, 'Q' to quit.")
         
         point_counter = 1
-        current_header = "P"  # Default header
+        current_header = "P"
 
         while True:
             cmd = input(f"\n[Point {point_counter} | {current_header}] Ready? (S/H/Q): ").strip().upper()
