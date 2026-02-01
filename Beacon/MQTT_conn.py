@@ -4,7 +4,7 @@ import subprocess
 import struct
 import paho.mqtt.client as mqtt
 
-class MQTTInterface(ABC):
+class MQTTInterfaceBeaconPAHO(ABC):
     def __init__(self, broker_address: str, broker_port: int):
         self.broker_address = broker_address
         self.broker_port = broker_port
@@ -27,7 +27,7 @@ class MQTTInterface(ABC):
 
 
 
-class MQTTInterfacePaho(MQTTInterface):
+class MQTTInterfaceBeacon(MQTTInterfaceBeaconPAHO):
     def __init__(self, broker_address: str, broker_port: int, on_message_callback):
         super().__init__(broker_address, broker_port)
         self.client = mqtt.Client(client_id="BeaconClient", clean_session=False)

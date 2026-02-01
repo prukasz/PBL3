@@ -3,7 +3,7 @@ from typing import List
 from Mqtt_conn import MqttConnection
 from Mqtt_services import MqttReceiver, MqttPublisher 
 
-class MqttInterface:
+class MqttInterfaceServer:
     def __init__(self, mqtt_client: MqttConnection, features: List[MqttReceiver] = [], publishers: List[MqttPublisher] = []): 
         
         self.mqtt = mqtt_client

@@ -1,6 +1,6 @@
 from Ble_conn import BLEInterface, BleakBLEInterface
 from Wifi_conn import WifiInterface
-from MQTT_conn import MQTTInterface
+from MQTT_conn import MQTTInterfaceBeacon
 from Data_processing import BeaconDataProcessor
 from pprint import pprint
 import time
@@ -11,7 +11,7 @@ import subprocess
 class Beacon:
     ALARM_REPEAT_COUNT = 3  # Number of cycles to repeat alarm
     
-    def __init__(self, wifi_adapter: WifiInterface, ble_adapter: BLEInterface, data_processor: BeaconDataProcessor, mqtt_client: MQTTInterface, adv_time: int, adv_period: int, scan_time: int, loop=None):
+    def __init__(self, wifi_adapter: WifiInterface, ble_adapter: BLEInterface, data_processor: BeaconDataProcessor, mqtt_client: MQTTInterfaceBeacon, adv_time: int, adv_period: int, scan_time: int, loop=None):
         self.ble = ble_adapter
         self.processor = data_processor
         self.scan_time = scan_time
